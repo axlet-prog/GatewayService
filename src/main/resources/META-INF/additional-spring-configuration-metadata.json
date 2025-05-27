@@ -1,0 +1,9 @@
+{
+  "properties": [
+    {
+      "name": "values.auth_endpoint",
+      "type": "java.lang.String",
+      "description": "endpoint for verifying jwt."
+    }
+  ]
+}

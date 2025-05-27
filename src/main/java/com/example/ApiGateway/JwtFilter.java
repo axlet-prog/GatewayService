@@ -1,0 +1,90 @@
+package com.example.ApiGateway;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.gateway.filter.GatewayFilter;
+import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Component
+public class JwtFilter extends AbstractGatewayFilterFactory<JwtFilter.Config> {
+
+    private final WebClient webClient;
+
+    @Value("${spring.cloud.gateway.routes[0].uri}")
+    private String authServiceUrl;
+
+    @Value("${values.auth_endpoint}")
+    private String authEndpoint;
+
+    public JwtFilter(WebClient.Builder webClientBuilder) {
+        super(Config.class);
+        this.webClient = webClientBuilder.build();
+    }
+
+    @Override
+    public GatewayFilter apply(Config config) {
+        return (exchange, chain) -> {
+
+            ServerHttpRequest request = exchange.getRequest();
+            String path = request.getURI().getPath();
+            System.out.println(config.getAuthorizedEndpoints());
+            boolean requiresAuth = config.getAuthorizedEndpoints().stream()
+                    .anyMatch(path::startsWith);
+            if (!requiresAuth) {
+                return chain.filter(exchange);
+            }
+
+            List<String> headers = request.getHeaders().getOrEmpty("Authorization");
+            if (headers.isEmpty() || !headers.get(0).startsWith("Bearer ")) {
+                return unauthorized(exchange);
+            }
+
+            String token = headers.get(0).substring("Bearer ".length());
+
+            System.out.println(authServiceUrl + authEndpoint + "?role=" + config.role);
+            return webClient.post()
+                    .uri(authServiceUrl + authEndpoint + "?role=" + config.role)
+                    .header("Authorization", "Bearer " + token)
+                    .retrieve()
+                    .onStatus((code) -> code.value() == 401, clientResponse -> Mono.error(new RuntimeException("Unautorized")))
+                    .bodyToMono(Void.class)
+                    .then(Mono.defer(() -> chain.filter(exchange)))
+                    .onErrorResume(e -> unauthorized(exchange));
+        };
+    }
+
+    private Mono<Void> unauthorized(ServerWebExchange exchange) {
+        exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+        return exchange.getResponse().setComplete();
+    }
+
+    public static class Config {
+        private List<String> authorizedEndpoints = new ArrayList<>();
+        private String role;
+
+
+        public String getRole() {
+            return role;
+        }
+
+        public void setRole(String role) {
+            this.role = role;
+        }
+
+        public List<String> getAuthorizedEndpoints() {
+            return authorizedEndpoints;
+        }
+
+        public void setAuthorizedEndpoints(List<String> authorizedEndpoints) {
+            this.authorizedEndpoints = authorizedEndpoints;
+        }
+    }
+}

@@ -1,0 +1,32 @@
+server:
+  port: 8083
+
+values:
+  auth_endpoint: /auth/verify
+
+spring:
+  application:
+    name: ApiGateway
+  cloud:
+    gateway:
+      routes:
+        - id: auth-service
+          uri: http://auth-service:8081
+          predicates:
+            - Path=/auth/**
+
+        - id: menu-service
+          uri: http://restaurant-service:8082
+          predicates:
+            - Path=/menu/**
+          filters:
+            - name: JwtFilter
+              args:
+                authorizedEndpoints:
+                  - /menu/client
+                role: "client"
+            - name: JwtFilter
+              args:
+                authorizedEndpoints:
+                  - /menu/admin
+                role: "admin"
