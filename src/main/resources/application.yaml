@@ -14,7 +14,6 @@ spring:
           uri: http://auth-service:8081
           predicates:
             - Path=/auth/**
-
         - id: menu-service
           uri: http://restaurant-service:8082
           predicates:
@@ -23,10 +22,18 @@ spring:
             - name: JwtFilter
               args:
                 authorizedEndpoints:
-                  - /menu/client
+                  - pathPattern: /menu/client
+                    methodType: get
                 role: "client"
             - name: JwtFilter
               args:
                 authorizedEndpoints:
-                  - /menu/admin
+                  - pathPattern: /menu/admin
+                    methodType: get
+                  - pathPattern: /menu
+                    methodType: post
+                  - pathPattern: /menu/[0-9]+
+                    methodType: delete
+                  - pathPattern: /menu/[0-9]+
+                    methodType: patch
                 role: "admin"

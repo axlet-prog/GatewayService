@@ -12,10 +12,10 @@ import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Component
 public class JwtFilter extends AbstractGatewayFilterFactory<JwtFilter.Config> {
-
     private final WebClient webClient;
 
     @Value("${spring.cloud.gateway.routes[0].uri}")
@@ -35,9 +35,18 @@ public class JwtFilter extends AbstractGatewayFilterFactory<JwtFilter.Config> {
 
             ServerHttpRequest request = exchange.getRequest();
             String path = request.getURI().getPath();
+            String methodType = request.getMethod().name().toLowerCase();
+
             System.out.println(config.getAuthorizedEndpoints());
             boolean requiresAuth = config.getAuthorizedEndpoints().stream()
-                    .anyMatch(path::startsWith);
+                    .anyMatch(endpoint ->
+                            Pattern.matches(endpoint.getPathPattern(), path) &&
+                                    endpoint.getMethodType().toLowerCase().equals(methodType)
+                    );
+
+            System.out.println(path);
+            System.out.println(methodType);
+
             if (!requiresAuth) {
                 return chain.filter(exchange);
             }
@@ -67,7 +76,7 @@ public class JwtFilter extends AbstractGatewayFilterFactory<JwtFilter.Config> {
     }
 
     public static class Config {
-        private List<String> authorizedEndpoints = new ArrayList<>();
+        private List<Endpoint> authorizedEndpoints = new ArrayList<>();
         private String role;
 
 
@@ -79,11 +88,11 @@ public class JwtFilter extends AbstractGatewayFilterFactory<JwtFilter.Config> {
             this.role = role;
         }
 
-        public List<String> getAuthorizedEndpoints() {
+        public List<Endpoint> getAuthorizedEndpoints() {
             return authorizedEndpoints;
         }
 
-        public void setAuthorizedEndpoints(List<String> authorizedEndpoints) {
+        public void setAuthorizedEndpoints(List<Endpoint> authorizedEndpoints) {
             this.authorizedEndpoints = authorizedEndpoints;
         }
     }
