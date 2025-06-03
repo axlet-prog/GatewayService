@@ -37,3 +37,9 @@ spring:
                   - pathPattern: /menu/[0-9]+
                     methodType: patch
                 role: "admin"
+
+        - id: order-service
+          uri: http://order-service:8084
+          predicates:
+            - Path=/order/**
+            - Path=/cart/**

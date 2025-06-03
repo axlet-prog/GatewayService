@@ -1,3 +1,4 @@
+name: po_project
 services:
   auth-service:
     build:
@@ -35,6 +36,19 @@ services:
     depends_on:
       - db
 
+  order-service:  
+    build:
+      context: ../OrderService
+      dockerfile: Dockerfile
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/po_db
+      SPRING_DATASOURCE_USERNAME: user2
+      SPRING_DATASOURCE_PASSWORD: pass
+    depends_on:
+      - db
+
   gateway:
     build:
       context: .
@@ -44,3 +58,4 @@ services:
     depends_on:
       - auth-service
       - restaurant-service
+      - order-service
