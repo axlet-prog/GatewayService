@@ -41,4 +41,4 @@ spring:
         - id: order-service
           uri: http://order-service:8084
           predicates:
-            - Path=/order/**, /cart/**
+            - Path=/orders/**, /cart/**
