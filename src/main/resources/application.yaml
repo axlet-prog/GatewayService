@@ -24,7 +24,8 @@ spring:
                 authorizedEndpoints:
                   - pathPattern: /menu/client
                     methodType: get
-                role: "client"
+                roles:
+                  - "client"
             - name: JwtFilter
               args:
                 authorizedEndpoints:
@@ -36,9 +37,50 @@ spring:
                     methodType: delete
                   - pathPattern: /menu/[0-9]+
                     methodType: patch
-                role: "admin"
+                roles:
+                  - "admin"
 
         - id: order-service
           uri: http://order-service:8084
           predicates:
             - Path=/orders/**, /cart/**
+          filters:
+            - name: JwtFilter
+              args:
+                authorizedEndpoints:
+                  - pathPattern: /cart
+                    methodType: get
+                  - pathPattern: /cart/add_item
+                    methodType: post
+                  - pathPattern: /cart/remove_item
+                    methodType: delete
+                  - pathPattern: /cart/create_order
+                    methodType: post
+                roles:
+                  - "client"
+            - name: JwtFilter
+              args:
+                authorizedEndpoints:
+                  - pathPattern: /orders
+                    methodType: get
+                  - pathPattern: /orders/[0-9]+
+                    methodType: get
+                roles:
+                  - "client"
+                  - "courier"
+                  - "admin"
+            - name: JwtFilter
+              args:
+                authorizedEndpoints:
+                  - pathPattern: /orders/assign
+                    methodType: get
+                roles:
+                  - "admin"
+            - name: JwtFilter
+              args:
+                authorizedEndpoints:
+                  - pathPattern: /orders/set_status
+                    methodType: post
+                roles:
+                  - "admin"
+                  - "courier"

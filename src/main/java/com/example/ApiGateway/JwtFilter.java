@@ -57,10 +57,10 @@ public class JwtFilter extends AbstractGatewayFilterFactory<JwtFilter.Config> {
             }
 
             String token = headers.get(0).substring("Bearer ".length());
-
-            System.out.println(authServiceUrl + authEndpoint + "?role=" + config.role);
+            String rolesCsv = config.getRoles().toString().replace("[", "").replace("]", "").replace(" ", "");
+            System.out.println(authServiceUrl + authEndpoint + "?role=" + rolesCsv);
             return webClient.post()
-                    .uri(authServiceUrl + authEndpoint + "?role=" + config.role)
+                    .uri(authServiceUrl + authEndpoint + "?role=" + rolesCsv)
                     .header("Authorization", "Bearer " + token)
                     .retrieve()
                     .onStatus((code) -> code.value() == 401, clientResponse -> Mono.error(new RuntimeException("Unautorized")))
@@ -77,16 +77,7 @@ public class JwtFilter extends AbstractGatewayFilterFactory<JwtFilter.Config> {
 
     public static class Config {
         private List<Endpoint> authorizedEndpoints = new ArrayList<>();
-        private String role;
-
-
-        public String getRole() {
-            return role;
-        }
-
-        public void setRole(String role) {
-            this.role = role;
-        }
+        private List<String> roles;
 
         public List<Endpoint> getAuthorizedEndpoints() {
             return authorizedEndpoints;
@@ -94,6 +85,14 @@ public class JwtFilter extends AbstractGatewayFilterFactory<JwtFilter.Config> {
 
         public void setAuthorizedEndpoints(List<Endpoint> authorizedEndpoints) {
             this.authorizedEndpoints = authorizedEndpoints;
+        }
+
+        public List<String> getRoles() {
+            return roles;
+        }
+
+        public void setRoles(List<String> roles) {
+            this.roles = roles;
         }
     }
 }
