@@ -1,5 +1,5 @@
 server:
-  port: 8083
+  port: 8080
 
 values:
   auth_endpoint: /auth/verify
@@ -11,11 +11,11 @@ spring:
     gateway:
       routes:
         - id: auth-service
-          uri: http://auth-service:8081
+          uri: http://auth-service:8080
           predicates:
             - Path=/auth/**
         - id: menu-service
-          uri: http://restaurant-service:8082
+          uri: http://restaurant-service:8080
           predicates:
             - Path=/menu/**
           filters:
@@ -41,7 +41,7 @@ spring:
                   - "admin"
 
         - id: order-service
-          uri: http://order-service:8084
+          uri: http://order-service:8080
           predicates:
             - Path=/orders/**, /cart/**
           filters:
