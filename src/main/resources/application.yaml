@@ -11,11 +11,11 @@ spring:
     gateway:
       routes:
         - id: auth-service
-          uri: http://auth-service:8080
+          uri: ${AUTH_URL:http://auth-service:8080}
           predicates:
             - Path=/auth/**
         - id: menu-service
-          uri: http://restaurant-service:8080
+          uri: ${RESTAURANT_URL:http://restaurant-service:8080}
           predicates:
             - Path=/menu/**
           filters:
@@ -41,7 +41,7 @@ spring:
                   - "admin"
 
         - id: order-service
-          uri: http://order-service:8080
+          uri: ${ORDER_URL:http://order-service:8080}
           predicates:
             - Path=/orders/**, /cart/**
           filters:
